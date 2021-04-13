@@ -99,8 +99,6 @@ def erToAFNe(er, state_index = 0):
 
     elif c == "*":
         auto = erToAFNe(er[2:-1], state_index = state_index + 1)
-        #print(f"erToAFNe: {er[2:-1]}")
-        #auto.debug_print()
 
         # Construindo Alfabeto
         add_symbols(auto, None)
@@ -169,36 +167,21 @@ def erToAFNe(er, state_index = 0):
 
 def afneToAFN(automato):
     if not isinstance(automato, AFNe): return None
-    print("AFNe")
-    automato.debug_print()
 
     return automato.afne_to_afn() # return afn
 
 def afnToAFD(automato):
     if not isinstance(automato, AFN): return None
-    print("AFN")
-
-    automato.debug_print()
 
     return automato.afn_to_afd() # return afd
 
 def afdToAFDmin(automato):
     if not isinstance(automato, AFD): return None
 
-    print("AFD")
-
-    automato.debug_print()
-
     return automato.afd_to_afd_min() # return afd_min
 
 def match(er, w):
-    automato = afdToAFDmin(afnToAFD(afneToAFN(erToAFNe(er))))
-
-    print("AFDmin")
-
-    automato.debug_print()
-    
-    return automato.accepted(w)
+    return afdToAFDmin(afnToAFD(afneToAFN(erToAFNe(er)))).accepted(w)
 
 def match_print(er, w):
     if match(er, w):

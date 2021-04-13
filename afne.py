@@ -27,19 +27,19 @@ class AFNe(Automato):
             for transition in transitions:
                 if transition[0] == "e": # ("e", destination_state)
                     for reached_state in calculate_closure_e(transition[1]):
-                        if reached_state in self.final_states: closure_e_final.add(reached_state)
+                        #if reached_state in self.final_states: closure_e_final.add(reached_state)
+                        if reached_state in self.final_states: closure_e_final.add(state)
                         
                         closure_e[state].append(reached_state)
             
             return closure_e[state]
 
-        for q in self.states:
+        for q in Q:
             q_delta = [] # transicoes de q
             closure_e_of_q = calculate_closure_e(q)
-            #closure_e_of_q = closure_e[q]
-            print(f"q = {q} Fe = {closure_e_of_q}")
             for closure_state in closure_e_of_q:
-                if closure_state in self.final_states and q != closure_state: F.append(q) # se q alcanca um estado final atraves de transicoes "e", ele tb sera final
+                if closure_state in self.final_states and q != closure_state and q not in F:
+                    F.append(q) # se q alcanca um estado final atraves de transicoes "e", ele tb sera final
 
                 transitions = []
 
@@ -53,12 +53,6 @@ class AFNe(Automato):
                             #q_delta.append(transitions[i])
                             
                             state = transitions[i][1]
-
-                            #Q.append(state)
-                            
-                            # o estado adicionado eh final?
-                            #if state not in F and (state in closure_e_final or state in self.final_states):
-                                #F.append(transitions[i][1])
                             
                             for closure_e_of_state in calculate_closure_e(state):
                                 q_delta.append((symbol, closure_e_of_state))
@@ -69,9 +63,8 @@ class AFNe(Automato):
                                     F.append(closure_e_of_state)
 
 
-                            #del transitions[i]
         
             if len(q_delta) > 0:
                 delta[q] = q_delta
-        print(closure_e_final)
+
         return AFN(sigma, Q, delta, q0, F)

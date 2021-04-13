@@ -120,12 +120,9 @@ class AFD(Automato):
                 else:
                     equiv_states[pair[1]].append(pair[0])
                 
-        #print(equiv_states)
-        #print(not_equiv_states)
         equiv_states_delta = {}
 
         for q in self.states:
-            if q == "d": continue # ignoramos q e seus equivalentes, pois serao removidos no final
             if q in equiv_states:
                 equiv_of_q = equiv_states[q]
 
@@ -137,15 +134,14 @@ class AFD(Automato):
                         
                         del equiv_states[q2]
 
-                #new_state = q + ","
-                new_state = q + ":"
+                # usando um separador diferente do utilizado no AFNtoAFD
+                new_state = q + "-"
                 initial_state = False
                 if q == self.initial_state: initial_state = True
                 for q_equiv in equiv_of_q:
                     if q_equiv == self.initial_state: initial_state = True
 
-                    #new_state += q_equiv + ","
-                    new_state += q_equiv + ":"
+                    new_state += q_equiv + "-"
                 
                 new_state = new_state[:-1] # remove ","
 
@@ -165,18 +161,15 @@ class AFD(Automato):
         for q in not_equiv_states:
             Q.append(q)
             if q == self.initial_state: q0 = q
-            elif q in self.final_states: F.append(q)
+            if q in self.final_states: F.append(q)
         
         # construindo delta
-        #print(equiv_states)
-        #print(equiv_states_delta)
         for q in Q:
             delta[q] = []
 
             q_aux = q
             if q not in self.states: # eh um estado novo
-                #q_aux = q.split(",")[0] # basta pegar o primeiro, pois sao equivalentes
-                q_aux = q.split(":")[0] # basta pegar o primeiro, pois sao equivalentes
+                q_aux = q.split("-")[0] # basta pegar o primeiro, pois sao equivalentes
             
             for s in sigma:
                 state = transition(q_aux,s)
@@ -189,17 +182,4 @@ class AFD(Automato):
                     delta[q].append((s, state))
                 
 
-        # removendo o estado inserido para minimização
-        if not is_total:
-
-            for q in Q:
-
-                for i in range(len(delta[q])-1, -1, -1):
-                    transition = delta[q][i]
-
-                    if transition[1] == "d":
-                        del delta[q][i]
-                
-                if len(delta[q]) == 0: del delta[q]
-        
         return AFDmin(sigma, Q, delta, q0, F)

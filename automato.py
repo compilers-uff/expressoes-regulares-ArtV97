@@ -12,7 +12,9 @@ class Automato():
         print(f"Sigma: {self.sigma}")
         print(f"Estado Inicial: {self.initial_state}")
         print(f"States: {self.states}")
-        print(f"Delta: {self.program_function}")
+        print("Delta:")
+        for key in self.program_function:
+            print(f"{key}:{self.program_function[key]}")
         print(f"Estados Finais: {self.final_states}")
         print("####################")
         print()
