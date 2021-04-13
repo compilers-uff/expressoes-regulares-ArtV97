@@ -16,10 +16,7 @@ class AFD(Automato):
         # checando se a funcao de transicao eh total
         is_total = True
         for q in self.states:
-            if q not in self.program_function:
-                is_total = False
-                break
-            elif len(self.program_function[q]) < len(self.sigma):
+            if q not in self.program_function or len(self.program_function[q]) < len(self.sigma):
                 is_total = False
                 break
         
@@ -57,15 +54,19 @@ class AFD(Automato):
                 pairs.append({q1, q2})
 
         def transition(state, symbol):
+            if state not in self.program_function: return None
+            
             for transition in self.program_function[state]:
                 if transition[0] == symbol:
                     return transition[1] # retorna o estado
         
-        def mark_recursive(i):
+        def mark_recursive(i, recursion_control = 0):
+            if recursion_control > 40: return
+
             l = list_of_each_pair[i]
             for p in l:
                 table[p] = False
-                mark_recursive(p)
+                mark_recursive(p, recursion_control + 1)
         
         # criando a tabela
         table = [True] * len(pairs)
@@ -124,6 +125,7 @@ class AFD(Automato):
         equiv_states_delta = {}
 
         for q in self.states:
+            if q == "d": continue # ignoramos q e seus equivalentes, pois serao removidos no final
             if q in equiv_states:
                 equiv_of_q = equiv_states[q]
 
@@ -135,13 +137,15 @@ class AFD(Automato):
                         
                         del equiv_states[q2]
 
-                new_state = q + ","
+                #new_state = q + ","
+                new_state = q + ":"
                 initial_state = False
                 if q == self.initial_state: initial_state = True
                 for q_equiv in equiv_of_q:
                     if q_equiv == self.initial_state: initial_state = True
 
-                    new_state += q_equiv + ","
+                    #new_state += q_equiv + ","
+                    new_state += q_equiv + ":"
                 
                 new_state = new_state[:-1] # remove ","
 
@@ -171,10 +175,13 @@ class AFD(Automato):
 
             q_aux = q
             if q not in self.states: # eh um estado novo
-                q_aux = q.split(",")[0] # basta pegar o primeiro, pois sao equivalentes
+                #q_aux = q.split(",")[0] # basta pegar o primeiro, pois sao equivalentes
+                q_aux = q.split(":")[0] # basta pegar o primeiro, pois sao equivalentes
             
             for s in sigma:
                 state = transition(q_aux,s)
+
+                if state == None: continue
 
                 if state in equiv_states_delta:
                     delta[q].append((s, equiv_states_delta[state]))
@@ -184,10 +191,9 @@ class AFD(Automato):
 
         # removendo o estado inserido para minimização
         if not is_total:
-            del delta["d"]
-            Q.remove("d")
 
             for q in Q:
+
                 for i in range(len(delta[q])-1, -1, -1):
                     transition = delta[q][i]
 
@@ -195,5 +201,5 @@ class AFD(Automato):
                         del delta[q][i]
                 
                 if len(delta[q]) == 0: del delta[q]
-
+        
         return AFDmin(sigma, Q, delta, q0, F)

@@ -20,7 +20,7 @@ def erToAFNe(er, state_index = 0):
         return AFNe(sigma, Q, delta, q0, F)
     elif len(er) == 1:
         sigma.append(er)
-        qf = "q" + "f" + str(state_index)
+        qf = "qf" + str(state_index)
         Q.append(qf)
         F.append(qf)
         delta = {q0: [(er, qf)]}
@@ -56,34 +56,40 @@ def erToAFNe(er, state_index = 0):
     if c == "+":
         er1, er2 = process_er(er)
         auto1 = erToAFNe(er1, state_index = state_index + 1)
-        #print(f"erToAFNe: {er1}")
-        #auto1.debug_print()
-
-        auto2 = erToAFNe(er2, state_index = state_index + 2)
-        #print(f"erToAFNe: {er2}")
-        #auto2.debug_print()
-
-        # Construindo Alfabeto
-        add_symbols(auto1, auto2)
 
         # Construindo a função programa
-        delta[q0] = [("e", auto1.initial_state), ("e", auto2.initial_state)]
+        delta[q0] = [("e", auto1.initial_state)]
 
+        auto1_state_index = 0
         for state in auto1.states:
+            if state[1] != "f":
+                index = int(state[1:]) # remove q
+            else:
+                index = int(state[2:]) # remove q e f
+
+            if index > auto1_state_index: auto1_state_index = index
+
             if state not in Q:
                 Q.append(state)
 
             if state in auto1.program_function:
                 delta[state] = auto1.program_function[state]
-        
+
+        auto2 = erToAFNe(er2, state_index = auto1_state_index + 1)
+
+        # Construindo Alfabeto
+        add_symbols(auto1, auto2)
+
+        delta[q0].append(("e", auto2.initial_state))
+
         for state in auto2.states:
             if state not in Q:
                 Q.append(state)
 
             if state in auto2.program_function:
                 delta[state] = auto2.program_function[state]
-        
-        qf = "q" + "f" + str(state_index)
+
+        qf = "qf" + str(state_index)
 
         delta[auto1.final_states[0]] = [("e", qf)]
         delta[auto2.final_states[0]] = [("e", qf)]
@@ -109,7 +115,7 @@ def erToAFNe(er, state_index = 0):
             if state in auto.program_function:
                 delta[state] = auto.program_function[state]
         
-        qf = "q" + "f" + str(state_index)
+        qf = "qf" + str(state_index)
 
         delta[q0].append(("e", qf))
         if auto.final_states[0] not in delta:
@@ -124,26 +130,29 @@ def erToAFNe(er, state_index = 0):
     elif c == ".":
         er1, er2 = process_er(er)
         auto1 = erToAFNe(er1, state_index = state_index)
-        #print(f"erToAFNe: {er1}")
-        #auto1.debug_print()
-
-        #auto2 = erToAFNe(er2, state_index = len(auto1.states) + 1)
-        auto2 = erToAFNe(er2, state_index = state_index + 1)
-        #print(f"erToAFNe: {er2}")
-        #auto2.debug_print()
-
-        # Construindo Alfabeto
-        add_symbols(auto1, auto2)
 
         # Construindo a função programa
         delta[q0] = auto1.program_function[auto1.initial_state]
 
+        auto1_state_index = 0
         for state in auto1.states[1:]: # o estado inicial ja foi inserido
+            if state[1] != "f":
+                index = int(state[1:]) # remove q
+            else:
+                index = int(state[2:]) # remove q e f
+
+            if index > auto1_state_index: auto1_state_index = index
+
             if state not in Q:
                 Q.append(state)
 
             if state in auto1.program_function:
                 delta[state] = auto1.program_function[state]
+
+        auto2 = erToAFNe(er2, state_index = auto1_state_index + 1)
+
+        # Construindo Alfabeto
+        add_symbols(auto1, auto2)
 
         delta[auto1.final_states[0]] = [("e", auto2.initial_state)]
 
@@ -160,21 +169,36 @@ def erToAFNe(er, state_index = 0):
 
 def afneToAFN(automato):
     if not isinstance(automato, AFNe): return None
+    print("AFNe")
+    automato.debug_print()
 
     return automato.afne_to_afn() # return afn
 
 def afnToAFD(automato):
     if not isinstance(automato, AFN): return None
+    print("AFN")
+
+    automato.debug_print()
 
     return automato.afn_to_afd() # return afd
 
 def afdToAFDmin(automato):
     if not isinstance(automato, AFD): return None
 
+    print("AFD")
+
+    automato.debug_print()
+
     return automato.afd_to_afd_min() # return afd_min
 
 def match(er, w):
-    return afdToAFDmin(afnToAFD(afneToAFN(erToAFNe(er)))).accepted(w)
+    automato = afdToAFDmin(afnToAFD(afneToAFN(erToAFNe(er))))
+
+    print("AFDmin")
+
+    automato.debug_print()
+    
+    return automato.accepted(w)
 
 def match_print(er, w):
     if match(er, w):

@@ -33,7 +33,8 @@ class AFN(Automato):
             for symbol in sigma:
                 reached_states = [] # estados alcancados por simbolo
                 for ql in list_q:
-                    if ql in self.final_states and ql not in F: F.append(ql)
+                    #if ql in self.final_states and ql not in F: F.append(ql)
+                    if ql in self.final_states and q not in F: F.append(q)
 
                     for reached_state in reached_states_from_q(ql, symbol):
                         if reached_state not in reached_states:

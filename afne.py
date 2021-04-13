@@ -33,14 +33,13 @@ class AFNe(Automato):
             
             return closure_e[state]
 
-
         for q in self.states:
-            q_delta = []
-            calculate_closure_e(q)
-            closure_e_of_q = closure_e[q]
-
+            q_delta = [] # transicoes de q
+            closure_e_of_q = calculate_closure_e(q)
+            #closure_e_of_q = closure_e[q]
+            print(f"q = {q} Fe = {closure_e_of_q}")
             for closure_state in closure_e_of_q:
-                if closure_state in self.final_states and q != closure_state: F.append(q)
+                if closure_state in self.final_states and q != closure_state: F.append(q) # se q alcanca um estado final atraves de transicoes "e", ele tb sera final
 
                 transitions = []
 
@@ -51,21 +50,28 @@ class AFNe(Automato):
                         
                     for i in range(len(transitions)-1,-1,-1):
                         if transitions[i][0] == symbol:
-                            q_delta.append(transitions[i])
+                            #q_delta.append(transitions[i])
                             
                             state = transitions[i][1]
 
-                            Q.append(state)
+                            #Q.append(state)
                             
                             # o estado adicionado eh final?
-                            if state not in F and (state in closure_e_final or state in self.final_states):
-                                F.append(transitions[i][1])
+                            #if state not in F and (state in closure_e_final or state in self.final_states):
+                                #F.append(transitions[i][1])
+                            
+                            for closure_e_of_state in calculate_closure_e(state):
+                                q_delta.append((symbol, closure_e_of_state))
+
+                                if closure_e_of_state not in Q: Q.append(closure_e_of_state)
+
+                                if closure_e_of_state not in F and (closure_e_of_state in closure_e_final or closure_e_of_state in self.final_states):
+                                    F.append(closure_e_of_state)
 
 
-                            del transitions[i]
+                            #del transitions[i]
         
             if len(q_delta) > 0:
                 delta[q] = q_delta
-
-
+        print(closure_e_final)
         return AFN(sigma, Q, delta, q0, F)
